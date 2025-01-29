@@ -1,4 +1,5 @@
 const searchInput = document.querySelector('.search-input');
+const locationButton = document.querySelector('.location-button')
 const currentWeatherDiv = document.querySelector('.current-weather');
 const hourlyWeatherDiv = document.querySelector('.hourly-weather .weather-list');
 
@@ -41,9 +42,9 @@ const displayHourlyForecast = (hourlyData) => {
  
 }
 
-const getWeatherDetails = async (cityName) => {
-  const API_URL = `http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${cityName}&days=2`;
-
+const getWeatherDetails = async (API_URL) => {
+  window.innerWidth <= 768 && searchInput.blur()  
+  
   try {
     // Fetch weather data from the API and parse the response as JSON
     const response = await fetch(API_URL);
@@ -62,18 +63,35 @@ const getWeatherDetails = async (cityName) => {
     // Combine hourly data from today and tomorrow
     const combinedHourlyData = [...data.forecast.forecastday[0].hour, ...data.forecast.forecastday[1].hour]
     displayHourlyForecast(combinedHourlyData)
+    searchInput.value = data.location.name
   }catch (error) {
     console.log(error);
   }
-
-
 }
+// Set up weather request for a specific city
+  const setupWeatherRequest = (cityName) => {
+    const API_URL = `http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${cityName}&days=2`;
+    getWeatherDetails(API_URL)
+  }
+
+
 
 // Handle user input in the search box
 searchInput.addEventListener('keyup', (e) => {
   const cityName = searchInput.value.trim();
 
   if(e.key == 'Enter' && cityName) {
-    getWeatherDetails(cityName);
+    setupWeatherRequest(cityName);
   }
+})
+
+// Get user's coordinates
+locationButton.addEventListener('click', () => {
+  navigator.geolocation.getCurrentPosition(position => {
+    const { latitude, longitude} = position.coords;
+    const API_URL = `http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${latitude},${longitude}&days=2`;
+    getWeatherDetails(API_URL)
+  }, error => {
+    alert('Location access denied. Please enable permissions to use this feature')
+  })
 })
