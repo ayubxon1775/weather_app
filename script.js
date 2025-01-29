@@ -44,6 +44,7 @@ const displayHourlyForecast = (hourlyData) => {
 
 const getWeatherDetails = async (API_URL) => {
   window.innerWidth <= 768 && searchInput.blur()  
+  document.body.classList.remove('show-no-results');
   
   try {
     // Fetch weather data from the API and parse the response as JSON
@@ -65,7 +66,7 @@ const getWeatherDetails = async (API_URL) => {
     displayHourlyForecast(combinedHourlyData)
     searchInput.value = data.location.name
   }catch (error) {
-    console.log(error);
+    document.body.classList.add('show-no-results');
   }
 }
 // Set up weather request for a specific city
@@ -95,3 +96,5 @@ locationButton.addEventListener('click', () => {
     alert('Location access denied. Please enable permissions to use this feature')
   })
 })
+// initial weather request for London as the default city
+setupWeatherRequest('Namangan');
