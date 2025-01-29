@@ -1,5 +1,6 @@
 const searchInput = document.querySelector('.search-input');
 const currentWeatherDiv = document.querySelector('.current-weather');
+const hourlyWeatherDiv = document.querySelector('.hourly-weather .weather-list');
 
 const API_KEY = '63d2691872c9423a9d840102252701';
 
@@ -16,8 +17,32 @@ const weatherCodes = {
 }
 
 
+const displayHourlyForecast = (hourlyData) => {
+  const currentHour = new Date().setMinutes(0, 0, 0);
+  const next24Hours = currentHour + 24 * 60 * 60 * 1000;
+
+  // Filter the hourly data to only include the next 24 hours
+  const next24HourData = hourlyData.filter(({time}) => {
+    const forecastTime = new Date(time).getTime();
+    return forecastTime >= currentHour && forecastTime <= next24Hours
+  });
+  // Generate HTML for each hourly forecast and display it
+   hourlyWeatherDiv.innerHTML = next24HourData.map(item => {
+    const temperature = Math.floor(item.temp_c);
+    const time = item.time.split(" ")[1].substring(0, 5);
+    const weatherIcon = Object.keys(weatherCodes).find(icon => weatherCodes[icon].includes(item.condition.code));
+
+    return `<li class="weather-item">
+            <p class="time">${time}</p>
+            <img src="icons/${weatherIcon}.svg" alt="" class="weather-icon">
+            <p class="temperature">${temperature}</p>
+            </li>`;
+  }).join("")
+ 
+}
+
 const getWeatherDetails = async (cityName) => {
-  const API_URL = `http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${cityName}`;
+  const API_URL = `http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${cityName}&days=2`;
 
   try {
     // Fetch weather data from the API and parse the response as JSON
@@ -34,7 +59,9 @@ const getWeatherDetails = async (cityName) => {
     currentWeatherDiv.querySelector('.temperature').innerHTML = `${temperature}<span>°C</span>`
     currentWeatherDiv.querySelector('.description').innerText = description
 
-    console.log(data);
+    // Combine hourly data from today and tomorrow
+    const combinedHourlyData = [...data.forecast.forecastday[0].hour, ...data.forecast.forecastday[1].hour]
+    displayHourlyForecast(combinedHourlyData)
   }catch (error) {
     console.log(error);
   }
